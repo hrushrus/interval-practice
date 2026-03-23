@@ -254,7 +254,7 @@ h1 {
 
 .controls {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
     margin-bottom: 2.5rem;
     width: 100%;
@@ -279,13 +279,13 @@ select {
     appearance: none;
     -webkit-appearance: none;
     width: 100%;
-    padding: 0.75rem 2.25rem 0.75rem 0.85rem;
+    padding: 0.75rem 2rem 0.75rem 0.85rem;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
     background-color: white;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%2364748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>');
     background-repeat: no-repeat;
-    background-position: right 0.75rem center;
+    background-position: right 0.6rem center;
     background-size: 1.1rem;
     font-size: 0.9rem;
     font-weight: 600;
