@@ -3,15 +3,16 @@ const VF = Vex.Flow;
 
 // Game State
 const state = {
+    currentUser: null,
     score: 0,
     streak: 0,
-    bestStreak: parseInt(localStorage.getItem('bestStreak')) || 0,
-    totalScore: parseInt(localStorage.getItem('totalScore')) || 0,
-    trainingType: 'intervals', // 'intervals', 'chords', 'scales', 'pitch'
-    currentMode: 'audio', // 'audio' or 'visual'
-    playbackMode: 'melodic', // 'melodic' or 'harmonic'
+    bestStreak: 0,
+    totalScore: 0,
+    trainingType: 'intervals',
+    currentMode: 'audio',
+    playbackMode: 'melodic',
     currentBaseMidi: null,
-    currentChallenge: null, // Holds the correct answer (interval offset, chord key, etc.)
+    currentChallenge: null,
     isToneInitialized: false,
     samplerLoaded: false
 };
@@ -72,6 +73,30 @@ const DATA = {
     }
 };
 
+// DOM Elements
+const uiElements = {
+    userOverlay: document.getElementById('user-overlay'),
+    sophieBtn: document.getElementById('sophie-btn'),
+    chrisBtn: document.getElementById('chris-btn'),
+    switchUserBtn: document.getElementById('switch-user-btn'),
+    appTitle: document.getElementById('app-title'),
+    trainingSelect: document.getElementById('training-select'),
+    modeSelect: document.getElementById('mode-select'),
+    playbackSelect: document.getElementById('playback-select'),
+    audioUi: document.getElementById('audio-ui'),
+    visualUi: document.getElementById('visual-ui'),
+    playBtn: document.getElementById('play-btn'),
+    scoreDisplay: document.getElementById('score'),
+    streakDisplay: document.getElementById('streak'),
+    bestStreakDisplay: document.getElementById('best-streak'),
+    resetBtn: document.getElementById('reset-btn'),
+    feedbackMsg: document.getElementById('feedback'),
+    nextBtn: document.getElementById('next-btn'),
+    buttonGrid: document.getElementById('button-grid'),
+    staffContainer: document.getElementById('staff-container'),
+    challengeQuestion: document.getElementById('challenge-question')
+};
+
 // Tone.js Sampler (Piano)
 const sampler = new Tone.Sampler({
     urls: {
@@ -90,35 +115,50 @@ const sampler = new Tone.Sampler({
         state.samplerLoaded = true;
         uiElements.playBtn.innerText = "Play Challenge";
         uiElements.playBtn.disabled = false;
-        generateNewChallenge();
+        if (state.currentUser) generateNewChallenge();
     }
 }).toDestination();
 
-// DOM Elements
-const uiElements = {
-    trainingSelect: document.getElementById('training-select'),
-    modeSelect: document.getElementById('mode-select'),
-    playbackSelect: document.getElementById('playback-select'),
-    audioUi: document.getElementById('audio-ui'),
-    visualUi: document.getElementById('visual-ui'),
-    playBtn: document.getElementById('play-btn'),
-    scoreDisplay: document.getElementById('score'),
-    streakDisplay: document.getElementById('streak'),
-    bestStreakDisplay: document.getElementById('best-streak'),
-    resetBtn: document.getElementById('reset-btn'),
-    feedbackMsg: document.getElementById('feedback'),
-    nextBtn: document.getElementById('next-btn'),
-    buttonGrid: document.getElementById('button-grid'),
-    staffContainer: document.getElementById('staff-container'),
-    challengeQuestion: document.getElementById('challenge-question')
-};
+// User Management
+function selectUser(user) {
+    state.currentUser = user;
+    localStorage.setItem('activeUser', user);
+    
+    // Apply Theme
+    if (user === 'chris') {
+        document.body.classList.add('chris-theme');
+        uiElements.appTitle.innerText = "Chris' interval practice";
+    } else {
+        document.body.classList.remove('chris-theme');
+        uiElements.appTitle.innerText = "Sophie's interval practice";
+    }
+
+    // Load Scores
+    state.totalScore = parseInt(localStorage.getItem(`${user}_totalScore`)) || 0;
+    state.bestStreak = parseInt(localStorage.getItem(`${user}_bestStreak`)) || 0;
+    state.streak = 0; // Current streak resets per session but could be saved too if desired
+
+    updateScoreDisplay();
+    uiElements.userOverlay.classList.add('hidden');
+    
+    if (state.samplerLoaded) {
+        generateNewChallenge();
+    }
+}
+
+function showUserSelection() {
+    uiElements.userOverlay.classList.remove('hidden');
+}
 
 // Initialize UI
 uiElements.playBtn.disabled = true;
 uiElements.playBtn.innerText = "Loading Audio...";
-updateScoreDisplay();
 
 // Event Listeners
+uiElements.sophieBtn.addEventListener('click', () => selectUser('sophie'));
+uiElements.chrisBtn.addEventListener('click', () => selectUser('chris'));
+uiElements.switchUserBtn.addEventListener('click', showUserSelection);
+
 uiElements.trainingSelect.addEventListener('change', (e) => {
     state.trainingType = e.target.value;
     generateNewChallenge();
@@ -147,12 +187,13 @@ uiElements.nextBtn.addEventListener('click', () => {
 });
 
 uiElements.resetBtn.addEventListener('click', () => {
-    if (confirm("Reset all your scores and streaks?")) {
+    if (confirm(`Reset all scores for ${state.currentUser}?`)) {
         state.score = 0;
         state.streak = 0;
         state.bestStreak = 0;
         state.totalScore = 0;
-        localStorage.clear();
+        localStorage.removeItem(`${state.currentUser}_totalScore`);
+        localStorage.removeItem(`${state.currentUser}_bestStreak`);
         updateScoreDisplay();
     }
 });
@@ -171,6 +212,7 @@ function updateUIMode() {
 }
 
 function generateNewChallenge() {
+    if (!state.currentUser) return;
     uiElements.nextBtn.classList.add('hidden');
     
     // Pick base note based on type
@@ -226,7 +268,6 @@ function playCurrentChallenge() {
     const frequencies = offsets.map(off => midiToFrequency(state.currentBaseMidi + off));
 
     if (state.trainingType === 'scales') {
-        // Always melodic for scales
         frequencies.forEach((freq, i) => {
             sampler.triggerAttackRelease(freq, "4n", now + i * 0.4);
         });
@@ -259,8 +300,8 @@ function handleGuess(guessId, btn) {
         }
         
         // Save to LocalStorage
-        localStorage.setItem('totalScore', state.totalScore);
-        localStorage.setItem('bestStreak', state.bestStreak);
+        localStorage.setItem(`${state.currentUser}_totalScore`, state.totalScore);
+        localStorage.setItem(`${state.currentUser}_bestStreak`, state.bestStreak);
 
         btn.classList.add('correct');
         uiElements.feedbackMsg.innerText = "Correct! " + state.currentChallenge.name;
@@ -314,12 +355,8 @@ function renderStaff() {
         });
         notes = [chord];
     } else {
-        // Melodic representation
         notes = vexNotesData.map(d => {
             const sn = new VF.StaveNote({ clef: "treble", keys: d.keys, duration: "q" });
-            if (d.accidental) sn.addModifier(new VF.Accidental(sn.keys[0].includes('#') ? '#' : '')); // Simple accidental check
-            
-            // Re-evaluating accidental logic for melodic
             if (d.accidental) sn.addModifier(new VF.Accidental(d.accidental));
             return sn;
         });
@@ -330,4 +367,12 @@ function renderStaff() {
     voice.addTickables(notes);
     new VF.Formatter().joinVoices([voice]).format([voice], 200);
     voice.draw(context, stave);
+}
+
+// Check for previously active user
+const savedUser = localStorage.getItem('activeUser');
+if (savedUser) {
+    selectUser(savedUser);
+} else {
+    showUserSelection();
 }

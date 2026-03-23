@@ -1,4 +1,5 @@
 :root {
+    /* Default: Sophie Theme */
     --primary-color: #6366f1;
     --primary-hover: #4f46e5;
     --secondary-color: #f43f5e;
@@ -10,6 +11,100 @@
     --error-color: #ef4444;
     --border-radius: 16px;
     --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+body.chris-theme {
+    --primary-color: #059669;
+    --primary-hover: #047857;
+    --secondary-color: #eab308;
+    --bg-gradient: linear-gradient(135deg, #10b981 0%, #eab308 100%);
+}
+
+/* User Overlay */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-gradient);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+}
+
+.overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.overlay-content {
+    background: white;
+    padding: 3rem;
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.overlay-content h2 {
+    margin-bottom: 2rem;
+    color: var(--text-color);
+}
+
+.user-buttons {
+    display: flex;
+    gap: 2rem;
+}
+
+.user-select-btn {
+    padding: 1.5rem 3rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: white;
+}
+
+.user-select-btn.sophie-theme {
+    background: linear-gradient(135deg, #6366f1, #f43f5e);
+}
+
+.user-select-btn.chris-theme {
+    background: linear-gradient(135deg, #059669, #eab308);
+}
+
+.user-select-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.switch-btn {
+    background: none;
+    border: 1px solid var(--text-muted);
+    color: var(--text-muted);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.switch-btn:hover {
+    background: var(--text-muted);
+    color: white;
 }
 
 * {

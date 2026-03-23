@@ -14,9 +14,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 </head>
 <body>
+    <div id="user-overlay" class="overlay">
+        <div class="overlay-content">
+            <h2>Welcome! Who is practicing?</h2>
+            <div class="user-buttons">
+                <button id="sophie-btn" class="user-select-btn sophie-theme">Sophie</button>
+                <button id="chris-btn" class="user-select-btn chris-theme">Chris</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <header>
-            <h1>Sophie and Chris' interval practice</h1>
+            <div class="header-top">
+                <h1 id="app-title">Sophie and Chris' interval practice</h1>
+                <button id="switch-user-btn" class="switch-btn">Switch User</button>
+            </div>
             <div class="score-board">
                 <span>Score: <span id="score">0</span></span>
                 <span>Streak: <span id="streak">0</span></span>
