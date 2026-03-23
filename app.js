@@ -312,8 +312,13 @@ function handleGuess(guessId, btn) {
         playCurrentChallenge();
     } else {
         state.streak = 0;
+        state.totalScore -= 5; // Negative scoring allowed
+        
+        // Save to LocalStorage even on incorrect to persist negative scores
+        localStorage.setItem(`${state.currentUser}_totalScore`, state.totalScore);
+
         btn.classList.add('incorrect');
-        uiElements.feedbackMsg.innerText = "Incorrect. It was " + state.currentChallenge.name;
+        uiElements.feedbackMsg.innerText = "Incorrect (-5). It was " + state.currentChallenge.name;
         uiElements.feedbackMsg.style.color = "var(--error-color)";
         const correctBtn = Array.from(allBtns).find(b => b.dataset.id == correctId);
         if (correctBtn) correctBtn.classList.add('correct');
