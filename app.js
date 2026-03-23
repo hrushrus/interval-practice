@@ -121,6 +121,7 @@ const sampler = new Tone.Sampler({
 
 // User Management
 function selectUser(user) {
+    console.log("Selecting user:", user);
     state.currentUser = user;
     localStorage.setItem('activeUser', user);
     
@@ -136,7 +137,7 @@ function selectUser(user) {
     // Load Scores
     state.totalScore = parseInt(localStorage.getItem(`${user}_totalScore`)) || 0;
     state.bestStreak = parseInt(localStorage.getItem(`${user}_bestStreak`)) || 0;
-    state.streak = 0; // Current streak resets per session but could be saved too if desired
+    state.streak = 0;
 
     updateScoreDisplay();
     uiElements.userOverlay.classList.add('hidden');
@@ -150,14 +151,16 @@ function showUserSelection() {
     uiElements.userOverlay.classList.remove('hidden');
 }
 
-// Initialize UI
-uiElements.playBtn.disabled = true;
-uiElements.playBtn.innerText = "Loading Audio...";
-
 // Event Listeners
-uiElements.sophieBtn.addEventListener('click', () => selectUser('sophie'));
-uiElements.chrisBtn.addEventListener('click', () => selectUser('chris'));
-uiElements.switchUserBtn.addEventListener('click', showUserSelection);
+if (uiElements.sophieBtn) {
+    uiElements.sophieBtn.addEventListener('click', () => selectUser('sophie'));
+}
+if (uiElements.chrisBtn) {
+    uiElements.chrisBtn.addEventListener('click', () => selectUser('chris'));
+}
+if (uiElements.switchUserBtn) {
+    uiElements.switchUserBtn.addEventListener('click', showUserSelection);
+}
 
 uiElements.trainingSelect.addEventListener('change', (e) => {
     state.trainingType = e.target.value;
@@ -369,7 +372,10 @@ function renderStaff() {
     voice.draw(context, stave);
 }
 
-// Check for previously active user
+// Initial Launch
+uiElements.playBtn.disabled = true;
+uiElements.playBtn.innerText = "Loading Audio...";
+
 const savedUser = localStorage.getItem('activeUser');
 if (savedUser) {
     selectUser(savedUser);
