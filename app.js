@@ -1,0 +1,333 @@
+// VexFlow setup
+const VF = Vex.Flow;
+
+// Game State
+const state = {
+    score: 0,
+    streak: 0,
+    bestStreak: parseInt(localStorage.getItem('bestStreak')) || 0,
+    totalScore: parseInt(localStorage.getItem('totalScore')) || 0,
+    trainingType: 'intervals', // 'intervals', 'chords', 'scales', 'pitch'
+    currentMode: 'audio', // 'audio' or 'visual'
+    playbackMode: 'melodic', // 'melodic' or 'harmonic'
+    currentBaseMidi: null,
+    currentChallenge: null, // Holds the correct answer (interval offset, chord key, etc.)
+    isToneInitialized: false,
+    samplerLoaded: false
+};
+
+// Data Definitions
+const DATA = {
+    intervals: {
+        question: "What interval is this?",
+        options: [
+            { id: 1, label: "m2", name: "Minor 2nd (m2)", offset: [0, 1] },
+            { id: 2, label: "M2", name: "Major 2nd (M2)", offset: [0, 2] },
+            { id: 3, label: "m3", name: "Minor 3rd (m3)", offset: [0, 3] },
+            { id: 4, label: "M3", name: "Major 3rd (M3)", offset: [0, 4] },
+            { id: 5, label: "P4", name: "Perfect 4th (P4)", offset: [0, 5] },
+            { id: 6, label: "TT", name: "Tritone (TT)", offset: [0, 6] },
+            { id: 7, label: "P5", name: "Perfect 5th (P5)", offset: [0, 7] },
+            { id: 8, label: "m6", name: "Minor 6th (m6)", offset: [0, 8] },
+            { id: 9, label: "M6", name: "Major 6th (M6)", offset: [0, 9] },
+            { id: 10, label: "m7", name: "Minor 7th (m7)", offset: [0, 10] },
+            { id: 11, label: "M7", name: "Major 7th (M7)", offset: [0, 11] },
+            { id: 12, label: "P8", name: "Perfect Octave (P8)", offset: [0, 12] }
+        ]
+    },
+    chords: {
+        question: "What chord is this?",
+        options: [
+            { id: 'major', label: "Major", name: "Major Triad", offset: [0, 4, 7] },
+            { id: 'minor', label: "Minor", name: "Minor Triad", offset: [0, 3, 7] },
+            { id: 'dim', label: "Diminished", name: "Diminished Triad", offset: [0, 3, 6] },
+            { id: 'aug', label: "Augmented", name: "Augmented Triad", offset: [0, 4, 8] }
+        ]
+    },
+    scales: {
+        question: "What scale is this?",
+        options: [
+            { id: 'major', label: "Major", name: "Major Scale", offset: [0, 2, 4, 5, 7, 9, 11, 12] },
+            { id: 'minor', label: "Nat Minor", name: "Natural Minor Scale", offset: [0, 2, 3, 5, 7, 8, 10, 12] },
+            { id: 'harmonic', label: "Harm Minor", name: "Harmonic Minor Scale", offset: [0, 2, 3, 5, 7, 8, 11, 12] },
+            { id: 'melodic', label: "Mel Minor", name: "Melodic Minor Scale", offset: [0, 2, 3, 5, 7, 9, 11, 12] }
+        ]
+    },
+    pitch: {
+        question: "What pitch is this?",
+        options: [
+            { id: 'C', label: "C", name: "Pitch: C", offset: [0] },
+            { id: 'C#', label: "C#", name: "Pitch: C#", offset: [1] },
+            { id: 'D', label: "D", name: "Pitch: D", offset: [2] },
+            { id: 'D#', label: "D#", name: "Pitch: D#", offset: [3] },
+            { id: 'E', label: "E", name: "Pitch: E", offset: [4] },
+            { id: 'F', label: "F", name: "Pitch: F", offset: [5] },
+            { id: 'F#', label: "F#", name: "Pitch: F#", offset: [6] },
+            { id: 'G', label: "G", name: "Pitch: G", offset: [7] },
+            { id: 'G#', label: "G#", name: "Pitch: G#", offset: [8] },
+            { id: 'A', label: "A", name: "Pitch: A", offset: [9] },
+            { id: 'A#', label: "A#", name: "Pitch: A#", offset: [10] },
+            { id: 'B', label: "B", name: "Pitch: B", offset: [11] }
+        ]
+    }
+};
+
+// Tone.js Sampler (Piano)
+const sampler = new Tone.Sampler({
+    urls: {
+        A0: "A0.mp3", C1: "C1.mp3", "D#1": "Ds1.mp3", "F#1": "Fs1.mp3",
+        A1: "A1.mp3", C2: "C2.mp3", "D#2": "Ds2.mp3", "F#2": "Fs2.mp3",
+        A2: "A2.mp3", C3: "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3",
+        A3: "A3.mp3", C4: "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3",
+        A4: "A4.mp3", C5: "C5.mp3", "D#5": "Ds5.mp3", "F#5": "Fs5.mp3",
+        A5: "A5.mp3", C6: "C6.mp3", "D#6": "Ds6.mp3", "F#6": "Fs6.mp3",
+        A6: "A6.mp3", C7: "C7.mp3", "D#7": "Ds7.mp3", "F#7": "Fs7.mp3",
+        A7: "A7.mp3", C8: "C8.mp3"
+    },
+    release: 1,
+    baseUrl: "https://tonejs.github.io/audio/salamander/",
+    onload: () => {
+        state.samplerLoaded = true;
+        uiElements.playBtn.innerText = "Play Challenge";
+        uiElements.playBtn.disabled = false;
+        generateNewChallenge();
+    }
+}).toDestination();
+
+// DOM Elements
+const uiElements = {
+    trainingSelect: document.getElementById('training-select'),
+    modeSelect: document.getElementById('mode-select'),
+    playbackSelect: document.getElementById('playback-select'),
+    audioUi: document.getElementById('audio-ui'),
+    visualUi: document.getElementById('visual-ui'),
+    playBtn: document.getElementById('play-btn'),
+    scoreDisplay: document.getElementById('score'),
+    streakDisplay: document.getElementById('streak'),
+    bestStreakDisplay: document.getElementById('best-streak'),
+    resetBtn: document.getElementById('reset-btn'),
+    feedbackMsg: document.getElementById('feedback'),
+    nextBtn: document.getElementById('next-btn'),
+    buttonGrid: document.getElementById('button-grid'),
+    staffContainer: document.getElementById('staff-container'),
+    challengeQuestion: document.getElementById('challenge-question')
+};
+
+// Initialize UI
+uiElements.playBtn.disabled = true;
+uiElements.playBtn.innerText = "Loading Audio...";
+updateScoreDisplay();
+
+// Event Listeners
+uiElements.trainingSelect.addEventListener('change', (e) => {
+    state.trainingType = e.target.value;
+    generateNewChallenge();
+});
+
+uiElements.modeSelect.addEventListener('change', (e) => {
+    state.currentMode = e.target.value;
+    updateUIMode();
+    presentCurrentChallenge();
+});
+
+uiElements.playbackSelect.addEventListener('change', (e) => {
+    state.playbackMode = e.target.value;
+});
+
+uiElements.playBtn.addEventListener('click', async () => {
+    if (!state.isToneInitialized) {
+        await Tone.start();
+        state.isToneInitialized = true;
+    }
+    playCurrentChallenge();
+});
+
+uiElements.nextBtn.addEventListener('click', () => {
+    generateNewChallenge();
+});
+
+uiElements.resetBtn.addEventListener('click', () => {
+    if (confirm("Reset all your scores and streaks?")) {
+        state.score = 0;
+        state.streak = 0;
+        state.bestStreak = 0;
+        state.totalScore = 0;
+        localStorage.clear();
+        updateScoreDisplay();
+    }
+});
+
+// Logic Functions
+function updateUIMode() {
+    if (state.currentMode === 'audio') {
+        uiElements.audioUi.classList.remove('hidden');
+        uiElements.audioUi.classList.add('active');
+        uiElements.visualUi.classList.add('hidden');
+    } else {
+        uiElements.audioUi.classList.remove('active');
+        uiElements.audioUi.classList.add('hidden');
+        uiElements.visualUi.classList.remove('hidden');
+    }
+}
+
+function generateNewChallenge() {
+    uiElements.nextBtn.classList.add('hidden');
+    
+    // Pick base note based on type
+    if (state.trainingType === 'pitch') {
+        state.currentBaseMidi = Math.floor(Math.random() * 24) + 53; // Larger range F3 to F5
+    } else {
+        state.currentBaseMidi = Math.floor(Math.random() * 8) + 60; // C4 to G4
+    }
+
+    // Pick random option
+    const options = DATA[state.trainingType].options;
+    state.currentChallenge = options[Math.floor(Math.random() * options.length)];
+
+    // Rebuild Button Grid
+    uiElements.buttonGrid.innerHTML = '';
+    uiElements.challengeQuestion.innerText = DATA[state.trainingType].question;
+
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'interval-btn';
+        btn.innerText = opt.label;
+        btn.dataset.id = opt.id;
+        btn.addEventListener('click', () => handleGuess(opt.id, btn));
+        uiElements.buttonGrid.appendChild(btn);
+    });
+
+    uiElements.feedbackMsg.innerText = "";
+    uiElements.feedbackMsg.style.color = "var(--text-color)";
+
+    if (state.currentMode === 'audio') {
+        uiElements.visualUi.classList.add('hidden');
+    }
+    presentCurrentChallenge();
+}
+
+function presentCurrentChallenge() {
+    if (!state.currentChallenge) return;
+    if (state.currentMode === 'visual') {
+        uiElements.visualUi.classList.remove('hidden');
+        renderStaff();
+    }
+}
+
+function midiToFrequency(midi) {
+    return Math.pow(2, (midi - 69) / 12) * 440;
+}
+
+function playCurrentChallenge() {
+    if (!state.samplerLoaded) return;
+    
+    const now = Tone.now();
+    const offsets = state.trainingType === 'pitch' ? [0] : state.currentChallenge.offset;
+    const frequencies = offsets.map(off => midiToFrequency(state.currentBaseMidi + off));
+
+    if (state.trainingType === 'scales') {
+        // Always melodic for scales
+        frequencies.forEach((freq, i) => {
+            sampler.triggerAttackRelease(freq, "4n", now + i * 0.4);
+        });
+    } else if (state.trainingType === 'pitch') {
+        sampler.triggerAttackRelease(frequencies[0], "2n", now);
+    } else if (state.playbackMode === 'melodic') {
+        frequencies.forEach((freq, i) => {
+            sampler.triggerAttackRelease(freq, "4n", now + i * 0.5);
+        });
+    } else {
+        sampler.triggerAttackRelease(frequencies, "2n", now);
+    }
+}
+
+function handleGuess(guessId, btn) {
+    const correctId = state.currentChallenge.id;
+    const allBtns = uiElements.buttonGrid.querySelectorAll('button');
+    allBtns.forEach(b => b.disabled = true);
+
+    uiElements.visualUi.classList.remove('hidden');
+    renderStaff();
+    uiElements.nextBtn.classList.remove('hidden');
+
+    if (guessId === correctId) {
+        state.score += 10;
+        state.streak += 1;
+        state.totalScore += 10;
+        if (state.streak > state.bestStreak) {
+            state.bestStreak = state.streak;
+        }
+        
+        // Save to LocalStorage
+        localStorage.setItem('totalScore', state.totalScore);
+        localStorage.setItem('bestStreak', state.bestStreak);
+
+        btn.classList.add('correct');
+        uiElements.feedbackMsg.innerText = "Correct! " + state.currentChallenge.name;
+        uiElements.feedbackMsg.style.color = "var(--success-color)";
+        playCurrentChallenge();
+    } else {
+        state.streak = 0;
+        btn.classList.add('incorrect');
+        uiElements.feedbackMsg.innerText = "Incorrect. It was " + state.currentChallenge.name;
+        uiElements.feedbackMsg.style.color = "var(--error-color)";
+        const correctBtn = Array.from(allBtns).find(b => b.dataset.id == correctId);
+        if (correctBtn) correctBtn.classList.add('correct');
+    }
+    updateScoreDisplay();
+}
+
+function updateScoreDisplay() {
+    uiElements.scoreDisplay.innerText = state.totalScore;
+    uiElements.streakDisplay.innerText = state.streak;
+    uiElements.bestStreakDisplay.innerText = state.bestStreak;
+}
+
+// Visual Rendering
+function midiToVexNote(midi) {
+    const NOTES = ["c", "c", "d", "d", "e", "f", "f", "g", "g", "a", "a", "b"];
+    const ACCIDENTALS = ["", "#", "", "#", "", "", "#", "", "#", "", "#", ""];
+    const noteClass = midi % 12;
+    const note = NOTES[noteClass];
+    const acc = ACCIDENTALS[noteClass];
+    const octave = Math.floor(midi / 12) - 1;
+    return { keys: [`${note}/${octave}`], accidental: acc };
+}
+
+function renderStaff() {
+    uiElements.staffContainer.innerHTML = '';
+    const renderer = new VF.Renderer(uiElements.staffContainer, VF.Renderer.Backends.SVG);
+    renderer.resize(300, 150);
+    const context = renderer.getContext();
+    const stave = new VF.Stave(10, 20, 280);
+    stave.addClef("treble").setContext(context).draw();
+
+    const offsets = state.trainingType === 'pitch' ? [0] : state.currentChallenge.offset;
+    const vexNotesData = offsets.map(off => midiToVexNote(state.currentBaseMidi + off));
+
+    let notes;
+    if (state.trainingType === 'chords' && state.playbackMode === 'harmonic') {
+        const keys = vexNotesData.map(d => d.keys[0]);
+        const chord = new VF.StaveNote({ clef: "treble", keys: keys, duration: "h" });
+        vexNotesData.forEach((d, i) => {
+            if (d.accidental) chord.addModifier(new VF.Accidental(d.accidental), i);
+        });
+        notes = [chord];
+    } else {
+        // Melodic representation
+        notes = vexNotesData.map(d => {
+            const sn = new VF.StaveNote({ clef: "treble", keys: d.keys, duration: "q" });
+            if (d.accidental) sn.addModifier(new VF.Accidental(sn.keys[0].includes('#') ? '#' : '')); // Simple accidental check
+            
+            // Re-evaluating accidental logic for melodic
+            if (d.accidental) sn.addModifier(new VF.Accidental(d.accidental));
+            return sn;
+        });
+    }
+
+    const voice = new VF.Voice({ num_beats: notes.length, beat_value: 4 });
+    voice.setStrict(false);
+    voice.addTickables(notes);
+    new VF.Formatter().joinVoices([voice]).format([voice], 200);
+    voice.draw(context, stave);
+}

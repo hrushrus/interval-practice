@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interval Practice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- VexFlow for rendering sheet music -->
+    <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
+    <!-- Tone.js for audio playback -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sophie and Chris' interval practice</h1>
+            <div class="score-board">
+                <span>Score: <span id="score">0</span></span>
+                <span>Streak: <span id="streak">0</span></span>
+                <span>Best: <span id="best-streak">0</span></span>
+                <button id="reset-btn" class="reset-link">Reset</button>
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="training-select">Training:</label>
+                <select id="training-select">
+                    <option value="intervals">Intervals</option>
+                    <option value="chords">Chords</option>
+                    <option value="scales">Scales</option>
+                    <option value="pitch">Perfect Pitch</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="mode-select">Mode:</label>
+                <select id="mode-select">
+                    <option value="audio">Ear Training (Audio)</option>
+                    <option value="visual">Sight Reading (Visual)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="playback-select">Playback:</label>
+                <select id="playback-select">
+                    <option value="melodic">Melodic</option>
+                    <option value="harmonic">Harmonic</option>
+                </select>
+            </div>
+        </div>
+
+        <main class="display-area">
+            <!-- Audio UI -->
+            <div id="audio-ui" class="active">
+                <button id="play-btn" class="primary-btn">Play Challenge</button>
+            </div>
+
+            <!-- Visual UI -->
+            <div id="visual-ui" class="hidden">
+                <div id="staff-container"></div>
+            </div>
+        </main>
+
+        <section class="input-area">
+            <h2 id="challenge-question">What interval is this?</h2>
+            <div id="button-grid" class="button-grid">
+                <!-- Buttons will be generated dynamically by app.js -->
+            </div>
+        </section>
+        
+        <div id="feedback" class="feedback-msg"></div>
+        <div class="next-area">
+            <button id="next-btn" class="primary-btn hidden">Next Interval</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
