@@ -145,50 +145,43 @@ body {
 body::before, body::after {
     content: "";
     position: fixed;
-    width: 300px;
-    height: 300px;
-    background-color: white;
-    opacity: 0.1;
+    width: 350px;
+    height: 350px;
+    opacity: 0.15;
     z-index: -1;
     pointer-events: none;
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
+    background-size: contain;
+    background-repeat: no-repeat;
     transition: all 0.5s ease;
 }
 
 body::before {
-    left: -50px;
-    top: 10%;
-    /* Violin Icon (More Detailed) */
-    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M9 17c0 2 1.5 3 3 3s3-1 3-3c0-1-1-2-1-3s1-2 1-3-1.5-3-3-3-3 1-3 3 1 2 1 3-1 2-1 3z"/><path d="M12 8V3M11 3h2M12 2a1 1 0 100 2 1 1 0 000-2z"/><path d="M10.5 13.5a.5.5 0 11-1 0 .5.5 0 011 0zM14.5 13.5a.5.5 0 11-1 0 .5.5 0 011 0z"/></svg>');
-    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M9 17c0 2 1.5 3 3 3s3-1 3-3c0-1-1-2-1-3s1-2 1-3-1.5-3-3-3-3 1-3 3 1 2 1 3-1 2-1 3z"/><path d="M12 8V3M11 3h2M12 2a1 1 0 100 2 1 1 0 000-2z"/><path d="M10.5 13.5a.5.5 0 11-1 0 .5.5 0 011 0zM14.5 13.5a.5.5 0 11-1 0 .5.5 0 011 0z"/></svg>');
-    transform: rotate(-15deg);
+    left: -80px;
+    top: 5%;
+    /* Detailed Violin (Kitsch-Minimalist) */
+    background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M100,40 Q115,40 115,60 Q115,75 105,80 Q125,90 125,120 Q125,150 100,150 Q75,150 75,120 Q75,90 95,80 Q85,75 85,60 Q85,40 100,40" fill="%23A0522D" /><rect x="97" y="20" width="6" height="80" fill="%23222" rx="1" /><path d="M90,100 Q95,110 90,120 M110,100 Q105,110 110,120" fill="none" stroke="%23222" stroke-width="2" /><line x1="98" y1="25" x2="98" y2="145" stroke="%23ddd" stroke-width="0.5" /><line x1="100" y1="25" x2="100" y2="145" stroke="%23ddd" stroke-width="0.5" /><line x1="102" y1="25" x2="102" y2="145" stroke="%23ddd" stroke-width="0.5" /></svg>');
+    transform: rotate(-10deg);
 }
 
 body::after {
-    right: -50px;
-    bottom: 10%;
-    /* Piano Icon (Detailed Top-Down Grand Piano) */
-    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M4 18V6c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2v3c0 4-3 5-3 9 0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2z"/><path d="M4 15h13"/><path d="M7 15v5M10 15v5M13 15v5"/></svg>');
-    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M4 18V6c0-1.1.9-2 2-2h12c1.1 0 2 .9 2 2v3c0 4-3 5-3 9 0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2z"/><path d="M4 15h13"/><path d="M7 15v5M10 15v5M13 15v5"/></svg>');
-    transform: rotate(15deg);
+    right: -80px;
+    bottom: 5%;
+    /* Detailed Grand Piano (Kitsch-Minimalist) */
+    background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M40,140 L40,60 Q40,40 70,40 L140,40 Q160,40 160,70 L160,130 Q160,140 150,140 L40,140" fill="%23222" /><rect x="45" y="125" width="110" height="10" fill="%23fff" rx="1" /><path d="M50,140 L50,160 M150,140 L150,160 M100,140 L100,160" stroke="%23222" stroke-width="4" stroke-linecap="round" /><rect x="50" y="125" width="2" height="10" fill="%23222" /><rect x="60" y="125" width="2" height="10" fill="%23222" /><rect x="70" y="125" width="2" height="10" fill="%23222" /><rect x="80" y="125" width="2" height="10" fill="%23222" /><rect x="90" y="125" width="2" height="10" fill="%23222" /><rect x="100" y="125" width="2" height="10" fill="%23222" /><rect x="110" y="125" width="2" height="10" fill="%23222" /><rect x="120" y="125" width="2" height="10" fill="%23222" /><rect x="130" y="125" width="2" height="10" fill="%23222" /><rect x="140" y="125" width="2" height="10" fill="%23222" /></svg>');
+    transform: rotate(10deg);
 }
 
 /* Background Decorations (Chris) */
 body.chris-theme::before {
-    /* Electric Guitar Icon (More Accurate Strat Silhouette) */
-    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M12 11l-2-2-6 6c-2 2 0 4 2 4l6-6-2-2z"/><path d="M11 10l8-8M17 2h2M18 1v2M19 3l2-2"/><circle cx="8" cy="15" r="2"/></svg>');
-    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M12 11l-2-2-6 6c-2 2 0 4 2 4l6-6-2-2z"/><path d="M11 10l8-8M17 2h2M18 1v2M19 3l2-2"/><circle cx="8" cy="15" r="2"/></svg>');
-    transform: rotate(-25deg);
+    /* Detailed Electric Guitar (Kitsch-Minimalist) */
+    background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><path d="M70,120 Q50,120 50,150 Q50,180 100,180 Q150,180 150,150 Q150,120 130,120 L130,110 Q140,100 130,90 L100,90 Q80,90 70,110 Z" fill="%23E63946" /><rect x="92" y="30" width="16" height="100" fill="%23222" /><path d="M92,30 L108,30 L115,15 L85,15 Z" fill="%23222" /><rect x="95" y="110" width="10" height="20" fill="%23ddd" /><circle cx="130" cy="155" r="4" fill="%23222" /><circle cx="115" cy="165" r="4" fill="%23222" /></svg>');
+    transform: rotate(-15deg);
 }
 
 body.chris-theme::after {
-    /* Drum Kit Icon (Accurate Snare & Hi-Hat) */
-    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="4" y="13" width="10" height="5" rx="1"/><path d="M4 15h10"/><path d="M17 18V6M14 8c0-1 1-2 3-2s3 1 3 2H14z"/><path d="M6 10l3 3M12 10l-3 3" stroke-linecap="round"/></svg>');
-    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="4" y="13" width="10" height="5" rx="1"/><path d="M4 15h10"/><path d="M17 18V6M14 8c0-1 1-2 3-2s3 1 3 2H14z"/><path d="M6 10l3 3M12 10l-3 3" stroke-linecap="round"/></svg>');
-    transform: rotate(10deg);
+    /* Detailed Drum Kit (Kitsch-Minimalist) */
+    background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="130" r="45" fill="%23457B9D" stroke="%23222" stroke-width="4" /><circle cx="100" cy="130" r="38" fill="none" stroke="%23fff" stroke-width="1" stroke-dasharray="4 4" /><rect x="40" y="90" width="40" height="15" rx="2" fill="%23A8DADC" stroke="%23222" stroke-width="2" /><line x1="60" y1="105" x2="60" y2="170" stroke="%23222" stroke-width="3" /><path d="M130,70 Q150,65 170,70 L170,75 Q150,70 130,75 Z" fill="%23F1FAEE" stroke="%23222" stroke-width="2" /><line x1="150" y1="75" x2="150" y2="170" stroke="%23222" stroke-width="3" /></svg>');
+    transform: rotate(15deg);
 }
 
 @media (max-width: 1000px) {
