@@ -483,6 +483,14 @@ body.chris-theme .interval-btn:hover:not(:disabled) {
     font-size: 1.1rem;
 }
 
+.sound-tip {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 2rem;
+    font-style: italic;
+}
+
 #staff-container {
     width: 100%;
     display: flex;

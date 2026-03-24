@@ -120,10 +120,21 @@ const sampler = new Tone.Sampler({
 }).toDestination();
 
 // User Management
-function selectUser(user) {
+async function selectUser(user) {
     console.log("Selecting user:", user);
     state.currentUser = user;
     localStorage.setItem('activeUser', user);
+    
+    // Force Audio Context Start on user gesture (crucial for iOS)
+    if (!state.isToneInitialized) {
+        try {
+            await Tone.start();
+            state.isToneInitialized = true;
+            console.log("Audio Context Started");
+        } catch (e) {
+            console.error("Audio start failed:", e);
+        }
+    }
     
     // Apply Theme
     if (user === 'chris') {
@@ -178,9 +189,15 @@ uiElements.playbackSelect.addEventListener('change', (e) => {
 });
 
 uiElements.playBtn.addEventListener('click', async () => {
-    if (!state.isToneInitialized) {
-        await Tone.start();
-        state.isToneInitialized = true;
+    // Aggressively try to start/resume audio context
+    if (!state.isToneInitialized || Tone.context.state !== 'running') {
+        try {
+            await Tone.start();
+            await Tone.context.resume();
+            state.isToneInitialized = true;
+        } catch (e) {
+            console.error("Audio resume failed:", e);
+        }
     }
     playCurrentChallenge();
 });
