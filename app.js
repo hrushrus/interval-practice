@@ -92,6 +92,11 @@ const uiElements = {
     resetBtn: document.getElementById('reset-btn'),
     feedbackMsg: document.getElementById('feedback'),
     nextBtn: document.getElementById('next-btn'),
+    rankingsOverlay: document.getElementById('rankings-overlay'),
+    rankingsBody: document.getElementById('rankings-body'),
+    viewRankingsBtn: document.getElementById('view-rankings-btn'),
+    closeRankingsBtn: document.getElementById('close-rankings-btn'),
+    endSessionBtn: document.getElementById('end-session-btn'),
     buttonGrid: document.getElementById('button-grid'),
     staffContainer: document.getElementById('staff-container'),
     challengeQuestion: document.getElementById('challenge-question')
@@ -163,15 +168,12 @@ function showUserSelection() {
 }
 
 // Event Listeners
-if (uiElements.sophieBtn) {
-    uiElements.sophieBtn.addEventListener('click', () => selectUser('sophie'));
-}
-if (uiElements.chrisBtn) {
-    uiElements.chrisBtn.addEventListener('click', () => selectUser('chris'));
-}
-if (uiElements.switchUserBtn) {
-    uiElements.switchUserBtn.addEventListener('click', showUserSelection);
-}
+uiElements.sophieBtn.addEventListener('click', () => selectUser('sophie'));
+uiElements.chrisBtn.addEventListener('click', () => selectUser('chris'));
+uiElements.switchUserBtn.addEventListener('click', showUserSelection);
+uiElements.viewRankingsBtn.addEventListener('click', showRankings);
+uiElements.closeRankingsBtn.addEventListener('click', closeRankings);
+uiElements.endSessionBtn.addEventListener('click', endSession);
 
 uiElements.trainingSelect.addEventListener('change', (e) => {
     state.trainingType = e.target.value;
@@ -217,6 +219,72 @@ uiElements.resetBtn.addEventListener('click', () => {
         updateScoreDisplay();
     }
 });
+
+function endSession() {
+    if (state.totalScore === 0) {
+        alert("Get some points before ending the session!");
+        return;
+    }
+
+    if (confirm(`Finish your session with ${state.totalScore} points and save to Rankings?`)) {
+        const history = JSON.parse(localStorage.getItem('interval_practice_history')) || [];
+        const entry = {
+            id: Date.now().toString(),
+            user: state.currentUser,
+            score: state.totalScore,
+            date: new Date().toISOString()
+        };
+        
+        history.push(entry);
+        localStorage.setItem('interval_practice_history', JSON.stringify(history));
+        
+        // Reset current session
+        state.totalScore = 0;
+        state.streak = 0;
+        localStorage.removeItem(`${state.currentUser}_totalScore`); // Reset their "current" running score
+        
+        updateScoreDisplay();
+        showRankings();
+        generateNewChallenge();
+    }
+}
+
+function showRankings() {
+    const history = JSON.parse(localStorage.getItem('interval_practice_history')) || [];
+    
+    // Sort by score (desc), then date (desc)
+    const sorted = history.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return new Date(b.date) - new Date(a.date);
+    });
+
+    uiElements.rankingsBody.innerHTML = '';
+    
+    if (sorted.length === 0) {
+        uiElements.rankingsBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">No sessions saved yet!</td></tr>';
+    } else {
+        sorted.slice(0, 50).forEach((entry, index) => {
+            const row = document.createElement('tr');
+            const dateObj = new Date(entry.date);
+            const dateStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' + 
+                          dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            row.innerHTML = `
+                <td class="rank-cell">#${index + 1}</td>
+                <td class="user-cell">${entry.user}</td>
+                <td class="score-cell">${entry.score}</td>
+                <td class="date-cell">${dateStr}</td>
+            `;
+            uiElements.rankingsBody.appendChild(row);
+        });
+    }
+
+    uiElements.rankingsOverlay.classList.remove('hidden');
+}
+
+function closeRankings() {
+    uiElements.rankingsOverlay.classList.add('hidden');
+}
 
 // Logic Functions
 function updateUIMode() {
