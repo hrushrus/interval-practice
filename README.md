@@ -25,5 +25,7 @@ A comprehensive, interactive web application for ear training and sight reading.
    python3 -m http.server 8000
    ```
 
+   https://hrushrus.github.io/interval-practice/
+
 ## License
 MIT
