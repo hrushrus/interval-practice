@@ -12,6 +12,9 @@
     <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"></script>
     <!-- Tone.js for audio playback -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Chart.js for progress trend -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 </head>
 <body>
     <div id="user-overlay" class="overlay">
@@ -47,11 +50,24 @@
         </div>
     </div>
 
+    <!-- Progress Overlay -->
+    <div id="progress-overlay" class="overlay hidden">
+        <div class="overlay-content rankings-content">
+            <h2>📈 Progress Trend</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Average score over time per user</p>
+            <div class="chart-container" style="position: relative; height:300px; width:100%; margin-bottom: 1.5rem;">
+                <canvas id="progress-chart"></canvas>
+            </div>
+            <button id="close-progress-btn" class="primary-btn">Close</button>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <div class="header-top">
                 <h1 id="app-title">Sophie and Chris' interval practice</h1>
                 <div class="header-actions">
+                    <button id="view-progress-btn" class="icon-btn">📈 Progress</button>
                     <button id="view-rankings-btn" class="icon-btn">🏆 Rankings</button>
                     <button id="switch-user-btn" class="switch-btn">Switch User</button>
                 </div>

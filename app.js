@@ -97,10 +97,16 @@ const uiElements = {
     viewRankingsBtn: document.getElementById('view-rankings-btn'),
     closeRankingsBtn: document.getElementById('close-rankings-btn'),
     endSessionBtn: document.getElementById('end-session-btn'),
+    progressOverlay: document.getElementById('progress-overlay'),
+    closeProgressBtn: document.getElementById('close-progress-btn'),
+    viewProgressBtn: document.getElementById('view-progress-btn'),
+    progressChartCanvas: document.getElementById('progress-chart'),
     buttonGrid: document.getElementById('button-grid'),
     staffContainer: document.getElementById('staff-container'),
     challengeQuestion: document.getElementById('challenge-question')
 };
+
+let progressChart = null;
 
 // Tone.js Sampler (Piano)
 const sampler = new Tone.Sampler({
@@ -173,6 +179,8 @@ uiElements.chrisBtn.addEventListener('click', () => selectUser('chris'));
 uiElements.switchUserBtn.addEventListener('click', showUserSelection);
 uiElements.viewRankingsBtn.addEventListener('click', showRankings);
 uiElements.closeRankingsBtn.addEventListener('click', closeRankings);
+uiElements.viewProgressBtn.addEventListener('click', showProgress);
+uiElements.closeProgressBtn.addEventListener('click', closeProgress);
 uiElements.endSessionBtn.addEventListener('click', endSession);
 
 uiElements.trainingSelect.addEventListener('change', (e) => {
@@ -286,6 +294,112 @@ function closeRankings() {
     uiElements.rankingsOverlay.classList.add('hidden');
 }
 
+function showProgress() {
+    const history = JSON.parse(localStorage.getItem('interval_practice_history')) || [];
+    
+    if (history.length === 0) {
+        alert("No practice history yet! Finish a session to see your progress.");
+        return;
+    }
+
+    uiElements.progressOverlay.classList.remove('hidden');
+    
+    // Group and Sort history by date
+    const sortedHistory = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    const users = ['sophie', 'chris'];
+    const datasets = [];
+    
+    // Prepare colors
+    const colors = {
+        sophie: {
+            border: '#6366f1',
+            bg: 'rgba(99, 102, 241, 0.1)'
+        },
+        chris: {
+            border: '#059669',
+            bg: 'rgba(5, 150, 105, 0.1)'
+        }
+    };
+
+    users.forEach(user => {
+        const userHistory = sortedHistory.filter(h => h.user === user);
+        if (userHistory.length === 0) return;
+
+        let cumulativeScore = 0;
+        const data = userHistory.map((entry, index) => {
+            cumulativeScore += entry.score;
+            const avg = cumulativeScore / (index + 1);
+            return {
+                x: new Date(entry.date),
+                y: avg
+            };
+        });
+
+        datasets.push({
+            label: user.charAt(0).toUpperCase() + user.slice(1),
+            data: data,
+            borderColor: colors[user].border,
+            backgroundColor: colors[user].bg,
+            borderWidth: 3,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 6
+        });
+    });
+
+    if (progressChart) {
+        progressChart.destroy();
+    }
+
+    progressChart = new Chart(uiElements.progressChartCanvas, {
+        type: 'line',
+        data: {
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day',
+                        displayFormats: {
+                            day: 'MMM d'
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Average Score'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y.toFixed(1);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function closeProgress() {
+    uiElements.progressOverlay.classList.add('hidden');
+}
+
 // Logic Functions
 function updateUIMode() {
     if (state.currentMode === 'audio') {
@@ -380,9 +494,9 @@ function handleGuess(guessId, btn) {
     uiElements.nextBtn.classList.remove('hidden');
 
     if (guessId === correctId) {
-        state.score += 10;
+        state.score += 1;
         state.streak += 1;
-        state.totalScore += 10;
+        state.totalScore += 1;
         if (state.streak > state.bestStreak) {
             state.bestStreak = state.streak;
         }
@@ -397,13 +511,13 @@ function handleGuess(guessId, btn) {
         playCurrentChallenge();
     } else {
         state.streak = 0;
-        state.totalScore -= 5; // Negative scoring allowed
+        state.totalScore -= 1; // Negative scoring allowed
         
         // Save to LocalStorage even on incorrect to persist negative scores
         localStorage.setItem(`${state.currentUser}_totalScore`, state.totalScore);
 
         btn.classList.add('incorrect');
-        uiElements.feedbackMsg.innerText = "Incorrect (-5). It was " + state.currentChallenge.name;
+        uiElements.feedbackMsg.innerText = "Incorrect (-1). It was " + state.currentChallenge.name;
         uiElements.feedbackMsg.style.color = "var(--error-color)";
         const correctBtn = Array.from(allBtns).find(b => b.dataset.id == correctId);
         if (correctBtn) correctBtn.classList.add('correct');
