@@ -715,8 +715,6 @@ function renderRhythmStaff(context) {
         const val = DATA.rhythm.noteTypes[type].beats[ts];
         const isRest = type.endsWith('r');
         
-        // VexFlow rest duration is usually the note duration + 'r' (e.g., 'qr' for quarter rest)
-        // Our 'type' already matches this convention for rests (wr, hr, qr, etc.)
         const noteParams = { clef: "treble", keys: ["b/4"], duration: type };
         if (!isRest) {
             noteParams.keys = ["c/5"];
@@ -724,7 +722,8 @@ function renderRhythmStaff(context) {
         
         const note = new VF.StaveNote(noteParams);
         
-        if (currentBeats < beatsPerBar) {
+        // Use a small epsilon to handle floating point precision
+        if (currentBeats + (val / 2) < beatsPerBar) {
             bar1Notes.push(note);
         } else {
             bar2Notes.push(note);
