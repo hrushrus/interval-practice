@@ -632,8 +632,8 @@ body.chris-theme .interval-btn:hover:not(:disabled) {
 }
 
 .note-icon {
-    width: 24px;
-    height: 36px;
+    width: 12px;
+    height: 18px;
     pointer-events: none;
 }
 
