@@ -463,16 +463,32 @@ function generateRandomRhythm(ts, bars) {
     const beatsPerBar = num;
     const types = Object.keys(DATA.rhythm.noteTypes);
     
-    // Weighted probabilities based on difficulty
+    // Explicit weights based on difficulty
     const getWeight = (type) => {
-        // High difficulty types (8th/16th rests) should be rare
+        const isRest = type.endsWith('r');
+        const level = state.rhythmDifficulty;
+
+        // Level 1: Absolutely no rests, no 16ths
+        if (level === 1) {
+            if (isRest || type === '16') return 0;
+            if (type === '8') return 0.1;
+            return 0.5;
+        }
+
+        // Difficulty scaling for rare items
         if (type === '8r' || type === '16r') {
-            return state.rhythmDifficulty >= 5 ? 0.05 : 0; 
+            return level >= 5 ? 0.05 : 0; 
         }
+        
         if (type === '16' || type === '8') {
-            return state.rhythmDifficulty >= 3 ? 0.3 : 0.1;
+            return level >= 3 ? 0.4 : 0.1;
         }
-        if (type.endsWith('r')) return 0.15; // Standard rests (wr, hr, qr)
+
+        if (isRest) {
+            // Standard rests appear more as level increases
+            return level >= 2 ? 0.15 : 0; 
+        }
+
         return 0.5; // Standard notes
     };
 
@@ -484,9 +500,20 @@ function generateRandomRhythm(ts, bars) {
             
             const weighted = [];
             possible.forEach(t => {
-                const count = Math.ceil(getWeight(t) * 100);
-                for(let j=0; j<count; j++) weighted.push(t);
+                const w = getWeight(t);
+                if (w > 0) {
+                    const count = Math.ceil(w * 100);
+                    for(let j=0; j<count; j++) weighted.push(t);
+                }
             });
+
+            // Fallback: If no weighted options, just pick the smallest available note
+            if (weighted.length === 0) {
+                const smallest = possible.sort((a, b) => DATA.rhythm.noteTypes[a].beats[ts] - DATA.rhythm.noteTypes[b].beats[ts])[0];
+                sequence.push(smallest);
+                remaining -= DATA.rhythm.noteTypes[smallest].beats[ts];
+                continue;
+            }
 
             const type = weighted[Math.floor(Math.random() * weighted.length)];
             sequence.push(type);
