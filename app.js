@@ -498,7 +498,7 @@ function generateNewChallenge() {
     if (state.trainingType === 'rhythm') {
         uiElements.buttonGrid.classList.add('hidden');
         uiElements.rhythmInputUi.classList.remove('hidden');
-        uiElements.rhythmAnnouncement.classList.remove('hidden');
+        uiElements.rhythmAnnouncement.classList.add('hidden'); // Ensure announcement is hidden
         uiElements.challengeQuestion.innerText = DATA.rhythm.question;
         generateRhythmChallenge();
         return;
