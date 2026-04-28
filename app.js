@@ -17,7 +17,9 @@ const state = {
     samplerLoaded: false,
     currentRhythmSequence: [],
     userRhythmInput: [],
-    currentTimeSignature: '4/4'
+    currentTimeSignature: '4/4',
+    rhythmDifficulty: 1,
+    rhythmCorrectCount: 0
 };
 
 // Data Definitions
@@ -461,13 +463,32 @@ function generateRandomRhythm(ts, bars) {
     const beatsPerBar = num;
     const types = Object.keys(DATA.rhythm.noteTypes);
     
+    // Weighted probabilities based on difficulty
+    const getWeight = (type) => {
+        // High difficulty types (8th/16th rests) should be rare
+        if (type === '8r' || type === '16r') {
+            return state.rhythmDifficulty >= 5 ? 0.05 : 0; 
+        }
+        if (type === '16' || type === '8') {
+            return state.rhythmDifficulty >= 3 ? 0.3 : 0.1;
+        }
+        if (type.endsWith('r')) return 0.15; // Standard rests (wr, hr, qr)
+        return 0.5; // Standard notes
+    };
+
     for (let i = 0; i < bars; i++) {
         let remaining = beatsPerBar;
         while (remaining > 0) {
             const possible = types.filter(t => DATA.rhythm.noteTypes[t].beats[ts] <= remaining);
             if (possible.length === 0) break;
             
-            const type = possible[Math.floor(Math.random() * possible.length)];
+            const weighted = [];
+            possible.forEach(t => {
+                const count = Math.ceil(getWeight(t) * 100);
+                for(let j=0; j<count; j++) weighted.push(t);
+            });
+
+            const type = weighted[Math.floor(Math.random() * weighted.length)];
             sequence.push(type);
             remaining -= DATA.rhythm.noteTypes[type].beats[ts];
         }
@@ -476,16 +497,21 @@ function generateRandomRhythm(ts, bars) {
 }
 
 function generateRhythmChallenge() {
-    const ts = DATA.rhythm.timeSignatures[Math.floor(Math.random() * DATA.rhythm.timeSignatures.length)];
+    // Progressive Time Signatures
+    let availableTS = ['4/4', '2/4'];
+    if (state.rhythmDifficulty >= 2) availableTS.push('3/4');
+    if (state.rhythmDifficulty >= 4) availableTS.push('6/8');
+
+    const ts = availableTS[Math.floor(Math.random() * availableTS.length)];
     state.currentTimeSignature = ts;
     uiElements.tsDisplay.innerText = ts;
     
     state.userRhythmInput = [];
     state.currentRhythmSequence = generateRandomRhythm(ts, 2);
     
-    // Rhythm ALWAYS needs the visual UI to show the input staff
     uiElements.visualUi.classList.remove('hidden');
-    uiElements.feedbackMsg.innerText = "";
+    uiElements.feedbackMsg.innerText = `Level ${state.rhythmDifficulty}`;
+    uiElements.feedbackMsg.style.color = "var(--text-muted)";
     renderStaff();
 }
 
@@ -652,21 +678,31 @@ function handleRhythmGuess() {
     if (correct === guess) {
         state.score += 1;
         state.streak += 1;
-        state.totalScore += 2; // Rhythm is harder
+        state.totalScore += (1 + state.rhythmDifficulty); // Scale score with difficulty
+        
+        state.rhythmCorrectCount += 1;
+        if (state.rhythmCorrectCount >= 3) {
+            state.rhythmDifficulty += 1;
+            state.rhythmCorrectCount = 0;
+        }
+
         if (state.streak > state.bestStreak) state.bestStreak = state.streak;
         
         localStorage.setItem(`${state.currentUser}_totalScore`, state.totalScore);
         localStorage.setItem(`${state.currentUser}_bestStreak`, state.bestStreak);
 
-        uiElements.feedbackMsg.innerText = "Perfect! You got the rhythm exactly right.";
+        uiElements.feedbackMsg.innerText = "Perfect! Level Up progressing...";
         uiElements.feedbackMsg.style.color = "var(--success-color)";
         playCurrentChallenge();
     } else {
         state.streak = 0;
         state.totalScore -= 1;
+        state.rhythmDifficulty = Math.max(1, state.rhythmDifficulty - 1); // Drop difficulty on error
+        state.rhythmCorrectCount = 0;
+        
         localStorage.setItem(`${state.currentUser}_totalScore`, state.totalScore);
 
-        uiElements.feedbackMsg.innerText = "Not quite. Here is the correct rhythm.";
+        uiElements.feedbackMsg.innerText = "Not quite. Difficulty lowered.";
         uiElements.feedbackMsg.style.color = "var(--error-color)";
         
         // Show correct rhythm
