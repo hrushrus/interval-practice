@@ -761,15 +761,13 @@ function renderRhythmStaff(context) {
     const ts = state.currentTimeSignature;
     const [num, den] = ts.split('/').map(Number);
     
-    // Widths for the two staves
-    const stave1Width = 200;
-    const stave2Width = 180;
+    // Use a single, wider staff for better formatting
+    const staffWidth = 430;
+    const stave = new VF.Stave(10, 20, staffWidth);
+    stave.addClef("treble").addTimeSignature(ts);
     
-    const stave1 = new VF.Stave(10, 20, stave1Width);
-    stave1.addClef("treble").addTimeSignature(ts).setContext(context).draw();
-    
-    const stave2 = new VF.Stave(10 + stave1Width, 20, stave2Width);
-    stave2.setContext(context).draw();
+    // Add a bar line in the middle
+    stave.setContext(context).draw();
 
     const sequence = state.userRhythmInput;
     const beatsPerBar = num;
@@ -784,8 +782,6 @@ function renderRhythmStaff(context) {
         const noteParams = { clef: "treble", keys: [isRest ? "b/4" : "c/5"], duration: type };
         const note = new VF.StaveNote(noteParams);
         
-        // Strictly allocate to bars based on accumulated beats
-        // Use a tiny epsilon for float safety
         if (currentBeats + val <= beatsPerBar + 0.01) {
             bar1Notes.push(note);
         } else {
@@ -794,26 +790,40 @@ function renderRhythmStaff(context) {
         currentBeats += val;
     });
 
-    // Format and draw Bar 1
+    // Create voices
+    const voice1 = new VF.Voice({ num_beats: num, beat_value: den }).setStrict(false);
+    voice1.addTickables(bar1Notes);
+    
+    const voice2 = new VF.Voice({ num_beats: num, beat_value: den }).setStrict(false);
+    voice2.addTickables(bar2Notes);
+
+    // Format all notes together for equal spacing
+    const formatter = new VF.Formatter();
+    
+    // We draw them measure by measure to handle the barline correctly
+    // Draw Bar 1
     if (bar1Notes.length > 0) {
-        try {
-            const voice1 = new VF.Voice({ num_beats: num, beat_value: den });
-            voice1.setStrict(false);
-            voice1.addTickables(bar1Notes);
-            new VF.Formatter().joinVoices([voice1]).format([voice1], stave1Width - 50);
-            voice1.draw(context, stave1);
-        } catch (e) { console.error("VF Bar 1 Error:", e); }
+        formatter.joinVoices([voice1]).format([voice1], (staffWidth / 2) - 50);
+        voice1.draw(context, stave);
     }
     
-    // Format and draw Bar 2
+    // Draw the middle barline manually at exactly 50%
+    const barlineX = stave.getX() + (staffWidth / 2) + 20;
+    const line = new VF.StaveLine({
+        first_indices: [0],
+        last_indices: [0]
+    }); // This is a hack, better to use drawVerticalBar
+    context.beginPath();
+    context.moveTo(barlineX, stave.getYForLine(0));
+    context.lineTo(barlineX, stave.getYForLine(4));
+    context.stroke();
+
+    // Draw Bar 2
     if (bar2Notes.length > 0) {
-        try {
-            const voice2 = new VF.Voice({ num_beats: num, beat_value: den });
-            voice2.setStrict(false);
-            voice2.addTickables(bar2Notes);
-            new VF.Formatter().joinVoices([voice2]).format([voice2], stave2Width - 20);
-            voice2.draw(context, stave2);
-        } catch (e) { console.error("VF Bar 2 Error:", e); }
+        // Create a temporary stave for bar 2 to handle coordinates
+        const stave2 = new VF.Stave(barlineX, 20, (staffWidth / 2) - 20);
+        formatter.joinVoices([voice2]).format([voice2], (staffWidth / 2) - 50);
+        voice2.draw(context, stave2);
     }
 }
 
