@@ -91,6 +91,7 @@
                     <option value="chords">Chords</option>
                     <option value="scales">Scales</option>
                     <option value="pitch">Perfect Pitch</option>
+                    <option value="rhythm">Rhythm Recognition</option>
                 </select>
             </div>
             <div class="control-group">
@@ -110,6 +111,11 @@
         </div>
 
         <main class="display-area">
+            <!-- Time Signature Announcement -->
+            <div id="rhythm-announcement" class="rhythm-announcement hidden">
+                <span id="ts-display">4/4</span>
+            </div>
+
             <!-- Audio UI -->
             <div id="audio-ui" class="active">
                 <button id="play-btn" class="primary-btn">Play Challenge</button>
@@ -125,6 +131,21 @@
             <h2 id="challenge-question">What interval is this?</h2>
             <div id="button-grid" class="button-grid">
                 <!-- Buttons will be generated dynamically by app.js -->
+            </div>
+            <!-- Rhythm Input Panel -->
+            <div id="rhythm-input-ui" class="hidden">
+                <div id="rhythm-palette" class="button-grid rhythm-palette">
+                    <button class="interval-btn rhythm-note-btn" data-type="w">𝅝</button>
+                    <button class="interval-btn rhythm-note-btn" data-type="h">𝅗𝅥</button>
+                    <button class="interval-btn rhythm-note-btn" data-type="q">𝅘𝅥</button>
+                    <button class="interval-btn rhythm-note-btn" data-type="8">𝅘𝅥𝅮</button>
+                    <button class="interval-btn rhythm-note-btn" data-type="16">𝅘𝅥𝅯</button>
+                </div>
+                <div class="rhythm-actions">
+                    <button id="rhythm-undo-btn" class="icon-btn">Undo</button>
+                    <button id="rhythm-clear-btn" class="icon-btn">Clear All</button>
+                    <button id="rhythm-submit-btn" class="primary-btn">Submit Answer</button>
+                </div>
             </div>
         </section>
         

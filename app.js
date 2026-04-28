@@ -14,7 +14,10 @@ const state = {
     currentBaseMidi: null,
     currentChallenge: null,
     isToneInitialized: false,
-    samplerLoaded: false
+    samplerLoaded: false,
+    currentRhythmSequence: [],
+    userRhythmInput: [],
+    currentTimeSignature: '4/4'
 };
 
 // Data Definitions
@@ -70,6 +73,17 @@ const DATA = {
             { id: 'A#', label: "A#", name: "Pitch: A#", offset: [10] },
             { id: 'B', label: "B", name: "Pitch: B", offset: [11] }
         ]
+    },
+    rhythm: {
+        question: "Recreate the rhythm you heard",
+        timeSignatures: ['4/4', '3/4', '2/4', '6/8'],
+        noteTypes: {
+            'w': { duration: 'w', beats: { '4/4': 4, '3/4': 4, '2/4': 4, '6/8': 8 } },
+            'h': { duration: 'h', beats: { '4/4': 2, '3/4': 2, '2/4': 2, '6/8': 4 } },
+            'q': { duration: 'q', beats: { '4/4': 1, '3/4': 1, '2/4': 1, '6/8': 2 } },
+            '8': { duration: '8', beats: { '4/4': 0.5, '3/4': 0.5, '2/4': 0.5, '6/8': 1 } },
+            '16': { duration: '16', beats: { '4/4': 0.25, '3/4': 0.25, '2/4': 0.25, '6/8': 0.5 } }
+        }
     }
 };
 
@@ -103,7 +117,13 @@ const uiElements = {
     progressChartCanvas: document.getElementById('progress-chart'),
     buttonGrid: document.getElementById('button-grid'),
     staffContainer: document.getElementById('staff-container'),
-    challengeQuestion: document.getElementById('challenge-question')
+    challengeQuestion: document.getElementById('challenge-question'),
+    rhythmInputUi: document.getElementById('rhythm-input-ui'),
+    rhythmUndoBtn: document.getElementById('rhythm-undo-btn'),
+    rhythmClearBtn: document.getElementById('rhythm-clear-btn'),
+    rhythmSubmitBtn: document.getElementById('rhythm-submit-btn'),
+    rhythmAnnouncement: document.getElementById('rhythm-announcement'),
+    tsDisplay: document.getElementById('ts-display')
 };
 
 let progressChart = null;
@@ -226,6 +246,30 @@ uiElements.resetBtn.addEventListener('click', () => {
         localStorage.removeItem(`${state.currentUser}_bestStreak`);
         updateScoreDisplay();
     }
+});
+
+uiElements.rhythmUndoBtn.addEventListener('click', () => {
+    state.userRhythmInput.pop();
+    renderStaff();
+});
+
+uiElements.rhythmClearBtn.addEventListener('click', () => {
+    state.userRhythmInput = [];
+    renderStaff();
+});
+
+uiElements.rhythmSubmitBtn.addEventListener('click', () => {
+    handleRhythmGuess();
+});
+
+document.querySelectorAll('.rhythm-note-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const type = btn.dataset.type;
+        if (canAddNote(type)) {
+            state.userRhythmInput.push(type);
+            renderStaff();
+        }
+    });
 });
 
 function endSession() {
@@ -413,9 +457,70 @@ function updateUIMode() {
     }
 }
 
+function getBeatsPerBar(ts) {
+    const [num, den] = ts.split('/').map(Number);
+    return den === 8 ? num : num; 
+}
+
+function canAddNote(type) {
+    const ts = state.currentTimeSignature;
+    const maxBeats = getBeatsPerBar(ts) * 2;
+    let currentBeats = state.userRhythmInput.reduce((sum, t) => sum + DATA.rhythm.noteTypes[t].beats[ts], 0);
+    return (currentBeats + DATA.rhythm.noteTypes[type].beats[ts]) <= maxBeats;
+}
+
+function generateRandomRhythm(ts, bars) {
+    const sequence = [];
+    const beatsPerBar = getBeatsPerBar(ts);
+    const types = Object.keys(DATA.rhythm.noteTypes);
+    
+    for (let i = 0; i < bars; i++) {
+        let remaining = beatsPerBar;
+        while (remaining > 0) {
+            // Filter types that fit
+            const possible = types.filter(t => DATA.rhythm.noteTypes[t].beats[ts] <= remaining);
+            if (possible.length === 0) break; // Should not happen with 16th notes
+            
+            const type = possible[Math.floor(Math.random() * possible.length)];
+            sequence.push(type);
+            remaining -= DATA.rhythm.noteTypes[type].beats[ts];
+        }
+    }
+    return sequence;
+}
+
+function generateRhythmChallenge() {
+    const ts = DATA.rhythm.timeSignatures[Math.floor(Math.random() * DATA.rhythm.timeSignatures.length)];
+    state.currentTimeSignature = ts;
+    uiElements.tsDisplay.innerText = ts;
+    
+    state.userRhythmInput = [];
+    state.currentRhythmSequence = generateRandomRhythm(ts, 2);
+    
+    uiElements.visualUi.classList.add('hidden');
+    uiElements.feedbackMsg.innerText = "";
+    renderStaff();
+}
+
 function generateNewChallenge() {
     if (!state.currentUser) return;
     uiElements.nextBtn.classList.add('hidden');
+    uiElements.feedbackMsg.innerText = "";
+    uiElements.feedbackMsg.style.color = "var(--text-color)";
+
+    if (state.trainingType === 'rhythm') {
+        uiElements.buttonGrid.classList.add('hidden');
+        uiElements.rhythmInputUi.classList.remove('hidden');
+        uiElements.rhythmAnnouncement.classList.remove('hidden');
+        uiElements.challengeQuestion.innerText = DATA.rhythm.question;
+        generateRhythmChallenge();
+        return;
+    }
+
+    // Standard Challenge Logic
+    uiElements.buttonGrid.classList.remove('hidden');
+    uiElements.rhythmInputUi.classList.add('hidden');
+    uiElements.rhythmAnnouncement.classList.add('hidden');
     
     // Pick base note based on type
     if (state.trainingType === 'pitch') {
@@ -441,9 +546,6 @@ function generateNewChallenge() {
         uiElements.buttonGrid.appendChild(btn);
     });
 
-    uiElements.feedbackMsg.innerText = "";
-    uiElements.feedbackMsg.style.color = "var(--text-color)";
-
     if (state.currentMode === 'audio') {
         uiElements.visualUi.classList.add('hidden');
     }
@@ -462,10 +564,30 @@ function midiToFrequency(midi) {
     return Math.pow(2, (midi - 69) / 12) * 440;
 }
 
+function playRhythmSequence(sequence, startTime) {
+    let currentTime = startTime;
+    const bpm = 90;
+    const secondsPerBeat = 60 / bpm;
+    
+    sequence.forEach(type => {
+        const toneDuration = type === 'w' ? '1n' : type === 'h' ? '2n' : type === 'q' ? '4n' : type === '8' ? '8n' : '16n';
+        sampler.triggerAttackRelease("C4", toneDuration, currentTime);
+        
+        const beats = DATA.rhythm.noteTypes[type].beats[state.currentTimeSignature];
+        currentTime += beats * secondsPerBeat;
+    });
+}
+
 function playCurrentChallenge() {
     if (!state.samplerLoaded) return;
     
     const now = Tone.now();
+    
+    if (state.trainingType === 'rhythm') {
+        playRhythmSequence(state.currentRhythmSequence, now);
+        return;
+    }
+
     const offsets = state.trainingType === 'pitch' ? [0] : state.currentChallenge.offset;
     const frequencies = offsets.map(off => midiToFrequency(state.currentBaseMidi + off));
 
@@ -525,6 +647,42 @@ function handleGuess(guessId, btn) {
     updateScoreDisplay();
 }
 
+function handleRhythmGuess() {
+    const correct = state.currentRhythmSequence.join(',');
+    const guess = state.userRhythmInput.join(',');
+
+    uiElements.visualUi.classList.remove('hidden');
+    renderStaff();
+    uiElements.nextBtn.classList.remove('hidden');
+
+    if (correct === guess) {
+        state.score += 1;
+        state.streak += 1;
+        state.totalScore += 2; // Rhythm is harder
+        if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+        
+        localStorage.setItem(`${state.currentUser}_totalScore`, state.totalScore);
+        localStorage.setItem(`${state.currentUser}_bestStreak`, state.bestStreak);
+
+        uiElements.feedbackMsg.innerText = "Perfect! You got the rhythm exactly right.";
+        uiElements.feedbackMsg.style.color = "var(--success-color)";
+        playCurrentChallenge();
+    } else {
+        state.streak = 0;
+        state.totalScore -= 1;
+        localStorage.setItem(`${state.currentUser}_totalScore`, state.totalScore);
+
+        uiElements.feedbackMsg.innerText = "Not quite. Here is the correct rhythm.";
+        uiElements.feedbackMsg.style.color = "var(--error-color)";
+        
+        // Show correct rhythm
+        state.userRhythmInput = [...state.currentRhythmSequence];
+        renderStaff();
+        playCurrentChallenge();
+    }
+    updateScoreDisplay();
+}
+
 function updateScoreDisplay() {
     uiElements.scoreDisplay.innerText = state.totalScore;
     uiElements.streakDisplay.innerText = state.streak;
@@ -542,11 +700,67 @@ function midiToVexNote(midi) {
     return { keys: [`${note}/${octave}`], accidental: acc };
 }
 
+function renderRhythmStaff(context) {
+    const ts = state.currentTimeSignature;
+    const [num, den] = ts.split('/').map(Number);
+    
+    const stave1 = new VF.Stave(10, 20, 200);
+    stave1.addClef("treble").addTimeSignature(ts).setContext(context).draw();
+    
+    const stave2 = new VF.Stave(210, 20, 200);
+    stave2.setContext(context).draw();
+
+    const sequence = state.userRhythmInput;
+    const beatsPerBar = getBeatsPerBar(ts);
+    
+    const bar1Notes = [];
+    const bar2Notes = [];
+    let currentBeats = 0;
+    
+    sequence.forEach(type => {
+        const val = DATA.rhythm.noteTypes[type].beats[ts];
+        const note = new VF.StaveNote({ clef: "treble", keys: ["c/5"], duration: type });
+        
+        if (currentBeats < beatsPerBar) {
+            bar1Notes.push(note);
+        } else {
+            bar2Notes.push(note);
+        }
+        currentBeats += val;
+    });
+
+    if (bar1Notes.length > 0) {
+        try {
+            const voice1 = new VF.Voice({ num_beats: num, beat_value: den });
+            voice1.setStrict(false);
+            voice1.addTickables(bar1Notes);
+            new VF.Formatter().joinVoices([voice1]).format([voice1], 150);
+            voice1.draw(context, stave1);
+        } catch (e) { console.error("VF Error bar 1", e); }
+    }
+    
+    if (bar2Notes.length > 0) {
+        try {
+            const voice2 = new VF.Voice({ num_beats: num, beat_value: den });
+            voice2.setStrict(false);
+            voice2.addTickables(bar2Notes);
+            new VF.Formatter().joinVoices([voice2]).format([voice2], 150);
+            voice2.draw(context, stave2);
+        } catch (e) { console.error("VF Error bar 2", e); }
+    }
+}
+
 function renderStaff() {
     uiElements.staffContainer.innerHTML = '';
     const renderer = new VF.Renderer(uiElements.staffContainer, VF.Renderer.Backends.SVG);
-    renderer.resize(300, 150);
+    renderer.resize(450, 150);
     const context = renderer.getContext();
+    
+    if (state.trainingType === 'rhythm') {
+        renderRhythmStaff(context);
+        return;
+    }
+
     const stave = new VF.Stave(10, 20, 280);
     stave.addClef("treble").setContext(context).draw();
 
