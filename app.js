@@ -761,10 +761,14 @@ function renderRhythmStaff(context) {
     const ts = state.currentTimeSignature;
     const [num, den] = ts.split('/').map(Number);
     
-    const stave1 = new VF.Stave(10, 20, 200);
+    // Widths for the two staves
+    const stave1Width = 200;
+    const stave2Width = 180;
+    
+    const stave1 = new VF.Stave(10, 20, stave1Width);
     stave1.addClef("treble").addTimeSignature(ts).setContext(context).draw();
     
-    const stave2 = new VF.Stave(210, 20, 200);
+    const stave2 = new VF.Stave(10 + stave1Width, 20, stave2Width);
     stave2.setContext(context).draw();
 
     const sequence = state.userRhythmInput;
@@ -777,16 +781,12 @@ function renderRhythmStaff(context) {
     sequence.forEach(type => {
         const val = DATA.rhythm.noteTypes[type].beats[ts];
         const isRest = type.endsWith('r');
-        
-        const noteParams = { clef: "treble", keys: ["b/4"], duration: type };
-        if (!isRest) {
-            noteParams.keys = ["c/5"];
-        }
-        
+        const noteParams = { clef: "treble", keys: [isRest ? "b/4" : "c/5"], duration: type };
         const note = new VF.StaveNote(noteParams);
         
-        // Use a small epsilon to handle floating point precision
-        if (currentBeats + (val / 2) < beatsPerBar) {
+        // Strictly allocate to bars based on accumulated beats
+        // Use a tiny epsilon for float safety
+        if (currentBeats + val <= beatsPerBar + 0.01) {
             bar1Notes.push(note);
         } else {
             bar2Notes.push(note);
@@ -794,29 +794,26 @@ function renderRhythmStaff(context) {
         currentBeats += val;
     });
 
+    // Format and draw Bar 1
     if (bar1Notes.length > 0) {
         try {
             const voice1 = new VF.Voice({ num_beats: num, beat_value: den });
             voice1.setStrict(false);
             voice1.addTickables(bar1Notes);
-            new VF.Formatter().joinVoices([voice1]).format([voice1], 150);
+            new VF.Formatter().joinVoices([voice1]).format([voice1], stave1Width - 50);
             voice1.draw(context, stave1);
-        } catch (e) { 
-            console.error("VexFlow Bar 1 Error:", e);
-            uiElements.feedbackMsg.innerText = "Error rendering staff. Try clearing.";
-        }
+        } catch (e) { console.error("VF Bar 1 Error:", e); }
     }
     
+    // Format and draw Bar 2
     if (bar2Notes.length > 0) {
         try {
             const voice2 = new VF.Voice({ num_beats: num, beat_value: den });
             voice2.setStrict(false);
             voice2.addTickables(bar2Notes);
-            new VF.Formatter().joinVoices([voice2]).format([voice2], 150);
+            new VF.Formatter().joinVoices([voice2]).format([voice2], stave2Width - 20);
             voice2.draw(context, stave2);
-        } catch (e) { 
-            console.error("VexFlow Bar 2 Error:", e);
-        }
+        } catch (e) { console.error("VF Bar 2 Error:", e); }
     }
 }
 
