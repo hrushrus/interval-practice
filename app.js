@@ -82,7 +82,12 @@ const DATA = {
             'h': { duration: 'h', beats: { '4/4': 2, '3/4': 2, '2/4': 2, '6/8': 4 } },
             'q': { duration: 'q', beats: { '4/4': 1, '3/4': 1, '2/4': 1, '6/8': 2 } },
             '8': { duration: '8', beats: { '4/4': 0.5, '3/4': 0.5, '2/4': 0.5, '6/8': 1 } },
-            '16': { duration: '16', beats: { '4/4': 0.25, '3/4': 0.25, '2/4': 0.25, '6/8': 0.5 } }
+            '16': { duration: '16', beats: { '4/4': 0.25, '3/4': 0.25, '2/4': 0.25, '6/8': 0.5 } },
+            'wr': { duration: 'wr', beats: { '4/4': 4, '3/4': 4, '2/4': 4, '6/8': 8 } },
+            'hr': { duration: 'hr', beats: { '4/4': 2, '3/4': 2, '2/4': 2, '6/8': 4 } },
+            'qr': { duration: 'qr', beats: { '4/4': 1, '3/4': 1, '2/4': 1, '6/8': 2 } },
+            '8r': { duration: '8r', beats: { '4/4': 0.5, '3/4': 0.5, '2/4': 0.5, '6/8': 1 } },
+            '16r': { duration: '16r', beats: { '4/4': 0.25, '3/4': 0.25, '2/4': 0.25, '6/8': 0.5 } }
         }
     }
 };
@@ -554,8 +559,13 @@ function playRhythmSequence(sequence, startTime) {
     const secondsPerBeat = 60 / bpm;
     
     sequence.forEach(type => {
-        const toneDuration = type === 'w' ? '1n' : type === 'h' ? '2n' : type === 'q' ? '4n' : type === '8' ? '8n' : '16n';
-        sampler.triggerAttackRelease("C4", toneDuration, currentTime);
+        const isRest = type.endsWith('r');
+        const duration = isRest ? type.slice(0, -1) : type;
+        const toneDuration = duration === 'w' ? '1n' : duration === 'h' ? '2n' : duration === 'q' ? '4n' : duration === '8' ? '8n' : '16n';
+        
+        if (!isRest) {
+            sampler.triggerAttackRelease("C4", toneDuration, currentTime);
+        }
         
         const beats = DATA.rhythm.noteTypes[type].beats[state.currentTimeSignature];
         currentTime += beats * secondsPerBeat;
@@ -703,8 +713,16 @@ function renderRhythmStaff(context) {
     
     sequence.forEach(type => {
         const val = DATA.rhythm.noteTypes[type].beats[ts];
-        // Ensure duration is valid for VexFlow
-        const note = new VF.StaveNote({ clef: "treble", keys: ["c/5"], duration: type });
+        const isRest = type.endsWith('r');
+        
+        // VexFlow rest duration is usually the note duration + 'r' (e.g., 'qr' for quarter rest)
+        // Our 'type' already matches this convention for rests (wr, hr, qr, etc.)
+        const noteParams = { clef: "treble", keys: ["b/4"], duration: type };
+        if (!isRest) {
+            noteParams.keys = ["c/5"];
+        }
+        
+        const note = new VF.StaveNote(noteParams);
         
         if (currentBeats < beatsPerBar) {
             bar1Notes.push(note);

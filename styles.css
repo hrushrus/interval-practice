@@ -608,17 +608,37 @@ body.chris-theme .interval-btn:hover:not(:disabled) {
     to { transform: translateX(0); opacity: 1; }
 }
 
-.rhythm-palette {
+.rhythm-palette-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
     margin-top: 1rem;
+}
+
+.rhythm-palette {
     grid-template-columns: repeat(5, 1fr) !important;
+    gap: 0.5rem !important;
 }
 
 .rhythm-note-btn {
-    font-size: 1rem !important;
-    padding: 1rem 0.5rem !important;
+    font-size: 2.25rem !important;
+    padding: 0.5rem 0 !important;
+    line-height: 1 !important;
     color: var(--text-color) !important;
-    font-family: 'Inter', sans-serif !important;
-    text-transform: capitalize;
+    font-family: 'Inter', system-ui, sans-serif !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#rhythm-palette-rests .rhythm-note-btn {
+    background: linear-gradient(145deg, #f1f5f9, #e2e8f0);
+    border-color: #cbd5e1;
+}
+
+#rhythm-palette-rests .rhythm-note-btn:hover {
+    background: #e2e8f0;
+    border-color: var(--primary-color);
 }
 
 .rhythm-actions {

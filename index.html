@@ -134,12 +134,21 @@
             </div>
             <!-- Rhythm Input Panel -->
             <div id="rhythm-input-ui" class="hidden">
-                <div id="rhythm-palette" class="button-grid rhythm-palette">
-                    <button class="interval-btn rhythm-note-btn" data-type="w">Whole</button>
-                    <button class="interval-btn rhythm-note-btn" data-type="h">Half</button>
-                    <button class="interval-btn rhythm-note-btn" data-type="q">Quarter</button>
-                    <button class="interval-btn rhythm-note-btn" data-type="8">8th</button>
-                    <button class="interval-btn rhythm-note-btn" data-type="16">16th</button>
+                <div class="rhythm-palette-container">
+                    <div id="rhythm-palette-notes" class="button-grid rhythm-palette">
+                        <button class="interval-btn rhythm-note-btn" data-type="w" title="Whole Note">𝅝</button>
+                        <button class="interval-btn rhythm-note-btn" data-type="h" title="Half Note">𝅗𝅥</button>
+                        <button class="interval-btn rhythm-note-btn" data-type="q" title="Quarter Note">𝅘𝅥</button>
+                        <button class="interval-btn rhythm-note-btn" data-type="8" title="Eighth Note">𝅘𝅥𝅮</button>
+                        <button class="interval-btn rhythm-note-btn" data-type="16" title="Sixteenth Note">𝅘𝅥𝅯</button>
+                    </div>
+                    <div id="rhythm-palette-rests" class="button-grid rhythm-palette">
+                        <button class="interval-btn rhythm-note-btn" data-type="wr" title="Whole Rest">𝄻</button>
+                        <button class="interval-btn rhythm-note-btn" data-type="hr" title="Half Rest">𝄼</button>
+                        <button class="interval-btn rhythm-note-btn" data-type="qr" title="Quarter Rest">𝄽</button>
+                        <button class="interval-btn rhythm-note-btn" data-type="8r" title="Eighth Rest">𝄾</button>
+                        <button class="interval-btn rhythm-note-btn" data-type="16r" title="Sixteenth Rest">𝄿</button>
+                    </div>
                 </div>
                 <div class="rhythm-actions">
                     <button id="rhythm-undo-btn" class="icon-btn">Undo</button>
