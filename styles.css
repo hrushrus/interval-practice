@@ -631,6 +631,16 @@ body.chris-theme .interval-btn:hover:not(:disabled) {
     align-items: center;
 }
 
+.note-icon {
+    width: 24px;
+    height: 36px;
+    pointer-events: none;
+}
+
+#rhythm-palette-notes .note-icon {
+    margin-top: -5px; /* Alignment tweak for notes with stems */
+}
+
 #rhythm-palette-rests .rhythm-note-btn {
     background: linear-gradient(145deg, #f1f5f9, #e2e8f0);
     border-color: #cbd5e1;

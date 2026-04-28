@@ -136,18 +136,38 @@
             <div id="rhythm-input-ui" class="hidden">
                 <div class="rhythm-palette-container">
                     <div id="rhythm-palette-notes" class="button-grid rhythm-palette">
-                        <button class="interval-btn rhythm-note-btn" data-type="w" title="Whole Note">𝅝</button>
-                        <button class="interval-btn rhythm-note-btn" data-type="h" title="Half Note">𝅗𝅥</button>
-                        <button class="interval-btn rhythm-note-btn" data-type="q" title="Quarter Note">𝅘𝅥</button>
-                        <button class="interval-btn rhythm-note-btn" data-type="8" title="Eighth Note">𝅘𝅥𝅮</button>
-                        <button class="interval-btn rhythm-note-btn" data-type="16" title="Sixteenth Note">𝅘𝅥𝅯</button>
+                        <button class="interval-btn rhythm-note-btn" data-type="w" title="Whole Note">
+                            <svg viewBox="0 0 30 20" class="note-icon"><ellipse cx="15" cy="10" rx="10" ry="7" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        </button>
+                        <button class="interval-btn rhythm-note-btn" data-type="h" title="Half Note">
+                            <svg viewBox="0 0 30 45" class="note-icon"><ellipse cx="10" cy="35" rx="8" ry="6" fill="none" stroke="currentColor" stroke-width="2"/><line x1="18" y1="35" x2="18" y2="5" stroke="currentColor" stroke-width="2"/></svg>
+                        </button>
+                        <button class="interval-btn rhythm-note-btn" data-type="q" title="Quarter Note">
+                            <svg viewBox="0 0 30 45" class="note-icon"><ellipse cx="10" cy="35" rx="8" ry="6" fill="currentColor"/><line x1="18" y1="35" x2="18" y2="5" stroke="currentColor" stroke-width="2"/></svg>
+                        </button>
+                        <button class="interval-btn rhythm-note-btn" data-type="8" title="Eighth Note">
+                            <svg viewBox="0 0 35 45" class="note-icon"><ellipse cx="10" cy="35" rx="8" ry="6" fill="currentColor"/><line x1="18" y1="35" x2="18" y2="5" stroke="currentColor" stroke-width="2"/><path d="M18,5 Q30,15 25,25" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        </button>
+                        <button class="interval-btn rhythm-note-btn" data-type="16" title="Sixteenth Note">
+                            <svg viewBox="0 0 35 45" class="note-icon"><ellipse cx="10" cy="35" rx="8" ry="6" fill="currentColor"/><line x1="18" y1="35" x2="18" y2="5" stroke="currentColor" stroke-width="2"/><path d="M18,5 Q30,15 25,20" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18,12 Q30,22 25,27" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        </button>
                     </div>
                     <div id="rhythm-palette-rests" class="button-grid rhythm-palette">
-                        <button class="interval-btn rhythm-note-btn" data-type="wr" title="Whole Rest">𝄻</button>
-                        <button class="interval-btn rhythm-note-btn" data-type="hr" title="Half Rest">𝄼</button>
-                        <button class="interval-btn rhythm-note-btn" data-type="qr" title="Quarter Rest">𝄽</button>
-                        <button class="interval-btn rhythm-note-btn" data-type="8r" title="Eighth Rest">𝄾</button>
-                        <button class="interval-btn rhythm-note-btn" data-type="16r" title="Sixteenth Rest">𝄿</button>
+                        <button class="interval-btn rhythm-note-btn" data-type="wr" title="Whole Rest">
+                            <svg viewBox="0 0 30 30" class="note-icon"><line x1="5" y1="10" x2="25" y2="10" stroke="currentColor" stroke-width="1"/><rect x="8" y="10" width="14" height="7" fill="currentColor"/></svg>
+                        </button>
+                        <button class="interval-btn rhythm-note-btn" data-type="hr" title="Half Rest">
+                            <svg viewBox="0 0 30 30" class="note-icon"><line x1="5" y1="20" x2="25" y2="20" stroke="currentColor" stroke-width="1"/><rect x="8" y="13" width="14" height="7" fill="currentColor"/></svg>
+                        </button>
+                        <button class="interval-btn rhythm-note-btn" data-type="qr" title="Quarter Rest">
+                            <svg viewBox="0 0 20 40" class="note-icon"><path d="M10,5 L15,15 L5,20 L15,25 L10,35" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        </button>
+                        <button class="interval-btn rhythm-note-btn" data-type="8r" title="Eighth Rest">
+                            <svg viewBox="0 0 20 40" class="note-icon"><circle cx="8" cy="15" r="3" fill="currentColor"/><path d="M8,15 Q15,15 10,35" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        </button>
+                        <button class="interval-btn rhythm-note-btn" data-type="16r" title="Sixteenth Rest">
+                            <svg viewBox="0 0 20 40" class="note-icon"><circle cx="8" cy="12" r="3" fill="currentColor"/><circle cx="6" cy="20" r="3" fill="currentColor"/><path d="M8,12 Q15,12 10,35 M6,20 Q13,20 8,30" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        </button>
                     </div>
                 </div>
                 <div class="rhythm-actions">
