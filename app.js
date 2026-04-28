@@ -177,10 +177,10 @@ async function selectUser(user) {
     // Apply Theme
     if (user === 'chris') {
         document.body.classList.add('chris-theme');
-        uiElements.appTitle.innerText = "Chris' interval practice";
+        uiElements.appTitle.innerText = "Chris' Musical Ear Practice";
     } else {
         document.body.classList.remove('chris-theme');
-        uiElements.appTitle.innerText = "Sophie's interval practice";
+        uiElements.appTitle.innerText = "Sophie's Musical Ear Practice";
     }
 
     // Load Scores
