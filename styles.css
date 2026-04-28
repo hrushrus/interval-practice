@@ -614,10 +614,11 @@ body.chris-theme .interval-btn:hover:not(:disabled) {
 }
 
 .rhythm-note-btn {
-    font-size: 2rem !important;
-    padding: 0.75rem 0 !important;
+    font-size: 1rem !important;
+    padding: 1rem 0.5rem !important;
     color: var(--text-color) !important;
     font-family: 'Inter', sans-serif !important;
+    text-transform: capitalize;
 }
 
 .rhythm-actions {

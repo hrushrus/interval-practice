@@ -248,29 +248,7 @@ uiElements.resetBtn.addEventListener('click', () => {
     }
 });
 
-uiElements.rhythmUndoBtn.addEventListener('click', () => {
-    state.userRhythmInput.pop();
-    renderStaff();
-});
-
-uiElements.rhythmClearBtn.addEventListener('click', () => {
-    state.userRhythmInput = [];
-    renderStaff();
-});
-
-uiElements.rhythmSubmitBtn.addEventListener('click', () => {
-    handleRhythmGuess();
-});
-
-document.querySelectorAll('.rhythm-note-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const type = btn.dataset.type;
-        if (canAddNote(type)) {
-            state.userRhythmInput.push(type);
-            renderStaff();
-        }
-    });
-});
+initRhythmListeners();
 
 function endSession() {
     if (state.totalScore === 0) {
@@ -459,27 +437,30 @@ function updateUIMode() {
 
 function getBeatsPerBar(ts) {
     const [num, den] = ts.split('/').map(Number);
-    return den === 8 ? num : num; 
+    // For VexFlow voices and our logic, we need to know the number of beats
+    // and the value of each beat.
+    return num;
 }
 
 function canAddNote(type) {
     const ts = state.currentTimeSignature;
-    const maxBeats = getBeatsPerBar(ts) * 2;
+    const [num, den] = ts.split('/').map(Number);
+    const maxBeats = num * 2;
     let currentBeats = state.userRhythmInput.reduce((sum, t) => sum + DATA.rhythm.noteTypes[t].beats[ts], 0);
     return (currentBeats + DATA.rhythm.noteTypes[type].beats[ts]) <= maxBeats;
 }
 
 function generateRandomRhythm(ts, bars) {
     const sequence = [];
-    const beatsPerBar = getBeatsPerBar(ts);
+    const [num, den] = ts.split('/').map(Number);
+    const beatsPerBar = num;
     const types = Object.keys(DATA.rhythm.noteTypes);
     
     for (let i = 0; i < bars; i++) {
         let remaining = beatsPerBar;
         while (remaining > 0) {
-            // Filter types that fit
             const possible = types.filter(t => DATA.rhythm.noteTypes[t].beats[ts] <= remaining);
-            if (possible.length === 0) break; // Should not happen with 16th notes
+            if (possible.length === 0) break;
             
             const type = possible[Math.floor(Math.random() * possible.length)];
             sequence.push(type);
@@ -547,7 +528,9 @@ function generateNewChallenge() {
         uiElements.buttonGrid.appendChild(btn);
     });
 
-    if (state.currentMode === 'audio') {
+    if (state.trainingType === 'rhythm' || state.currentMode === 'visual') {
+        uiElements.visualUi.classList.remove('hidden');
+    } else {
         uiElements.visualUi.classList.add('hidden');
     }
     presentCurrentChallenge();
@@ -712,7 +695,7 @@ function renderRhythmStaff(context) {
     stave2.setContext(context).draw();
 
     const sequence = state.userRhythmInput;
-    const beatsPerBar = getBeatsPerBar(ts);
+    const beatsPerBar = num;
     
     const bar1Notes = [];
     const bar2Notes = [];
@@ -720,6 +703,7 @@ function renderRhythmStaff(context) {
     
     sequence.forEach(type => {
         const val = DATA.rhythm.noteTypes[type].beats[ts];
+        // Ensure duration is valid for VexFlow
         const note = new VF.StaveNote({ clef: "treble", keys: ["c/5"], duration: type });
         
         if (currentBeats < beatsPerBar) {
@@ -737,7 +721,10 @@ function renderRhythmStaff(context) {
             voice1.addTickables(bar1Notes);
             new VF.Formatter().joinVoices([voice1]).format([voice1], 150);
             voice1.draw(context, stave1);
-        } catch (e) { console.error("VF Error bar 1", e); }
+        } catch (e) { 
+            console.error("VexFlow Bar 1 Error:", e);
+            uiElements.feedbackMsg.innerText = "Error rendering staff. Try clearing.";
+        }
     }
     
     if (bar2Notes.length > 0) {
@@ -747,8 +734,36 @@ function renderRhythmStaff(context) {
             voice2.addTickables(bar2Notes);
             new VF.Formatter().joinVoices([voice2]).format([voice2], 150);
             voice2.draw(context, stave2);
-        } catch (e) { console.error("VF Error bar 2", e); }
+        } catch (e) { 
+            console.error("VexFlow Bar 2 Error:", e);
+        }
     }
+}
+
+function initRhythmListeners() {
+    uiElements.rhythmUndoBtn.addEventListener('click', () => {
+        state.userRhythmInput.pop();
+        renderStaff();
+    });
+
+    uiElements.rhythmClearBtn.addEventListener('click', () => {
+        state.userRhythmInput = [];
+        renderStaff();
+    });
+
+    uiElements.rhythmSubmitBtn.addEventListener('click', () => {
+        handleRhythmGuess();
+    });
+
+    document.querySelectorAll('.rhythm-note-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const type = btn.dataset.type;
+            if (canAddNote(type)) {
+                state.userRhythmInput.push(type);
+                renderStaff();
+            }
+        });
+    });
 }
 
 function renderStaff() {
