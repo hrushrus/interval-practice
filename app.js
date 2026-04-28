@@ -497,7 +497,8 @@ function generateRhythmChallenge() {
     state.userRhythmInput = [];
     state.currentRhythmSequence = generateRandomRhythm(ts, 2);
     
-    uiElements.visualUi.classList.add('hidden');
+    // Rhythm ALWAYS needs the visual UI to show the input staff
+    uiElements.visualUi.classList.remove('hidden');
     uiElements.feedbackMsg.innerText = "";
     renderStaff();
 }
