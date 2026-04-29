@@ -757,21 +757,12 @@ function midiToVexNote(midi) {
     return { keys: [`${note}/${octave}`], accidental: acc };
 }
 
-function renderRhythmStaff(context) {
+function renderRhythmStaff(context, width, isMobile) {
     const ts = state.currentTimeSignature;
     const [num, den] = ts.split('/').map(Number);
     
-    // Use a single, wider staff for better formatting
-    const staffWidth = 430;
-    const stave = new VF.Stave(10, 20, staffWidth);
-    stave.addClef("treble").addTimeSignature(ts);
-    
-    // Add a bar line in the middle
-    stave.setContext(context).draw();
-
     const sequence = state.userRhythmInput;
     const beatsPerBar = num;
-    
     const bar1Notes = [];
     const bar2Notes = [];
     let currentBeats = 0;
@@ -790,40 +781,52 @@ function renderRhythmStaff(context) {
         currentBeats += val;
     });
 
-    // Create voices
     const voice1 = new VF.Voice({ num_beats: num, beat_value: den }).setStrict(false);
     voice1.addTickables(bar1Notes);
-    
     const voice2 = new VF.Voice({ num_beats: num, beat_value: den }).setStrict(false);
     voice2.addTickables(bar2Notes);
 
-    // Format all notes together for equal spacing
     const formatter = new VF.Formatter();
-    
-    // We draw them measure by measure to handle the barline correctly
-    // Draw Bar 1
-    if (bar1Notes.length > 0) {
-        formatter.joinVoices([voice1]).format([voice1], (staffWidth / 2) - 50);
-        voice1.draw(context, stave);
-    }
-    
-    // Draw the middle barline manually at exactly 50%
-    const barlineX = stave.getX() + (staffWidth / 2) + 20;
-    const line = new VF.StaveLine({
-        first_indices: [0],
-        last_indices: [0]
-    }); // This is a hack, better to use drawVerticalBar
-    context.beginPath();
-    context.moveTo(barlineX, stave.getYForLine(0));
-    context.lineTo(barlineX, stave.getYForLine(4));
-    context.stroke();
 
-    // Draw Bar 2
-    if (bar2Notes.length > 0) {
-        // Create a temporary stave for bar 2 to handle coordinates
-        const stave2 = new VF.Stave(barlineX, 20, (staffWidth / 2) - 20);
-        formatter.joinVoices([voice2]).format([voice2], (staffWidth / 2) - 50);
-        voice2.draw(context, stave2);
+    if (isMobile) {
+        // Stacked Layout for Mobile
+        const staffWidth = width - 40;
+        const stave1 = new VF.Stave(20, 10, staffWidth);
+        stave1.addClef("treble").addTimeSignature(ts).setContext(context).draw();
+        if (bar1Notes.length > 0) {
+            formatter.joinVoices([voice1]).format([voice1], staffWidth - 60);
+            voice1.draw(context, stave1);
+        }
+
+        const stave2 = new VF.Stave(20, 110, staffWidth);
+        stave2.addClef("treble").setContext(context).draw();
+        if (bar2Notes.length > 0) {
+            formatter.joinVoices([voice2]).format([voice2], staffWidth - 60);
+            voice2.draw(context, stave2);
+        }
+    } else {
+        // Side-by-Side Layout for Desktop
+        const staffWidth = width - 20;
+        const stave = new VF.Stave(10, 20, staffWidth);
+        stave.addClef("treble").addTimeSignature(ts).setContext(context).draw();
+
+        const drawingWidth = staffWidth - 60;
+        if (bar1Notes.length > 0) {
+            formatter.joinVoices([voice1]).format([voice1], (drawingWidth / 2) - 10);
+            voice1.draw(context, stave);
+        }
+        
+        const barlineX = stave.getX() + (drawingWidth / 2) + 60;
+        context.beginPath();
+        context.moveTo(barlineX, stave.getYForLine(0));
+        context.lineTo(barlineX, stave.getYForLine(4));
+        context.stroke();
+
+        if (bar2Notes.length > 0) {
+            const stave2 = new VF.Stave(barlineX, 20, (drawingWidth / 2));
+            formatter.joinVoices([voice2]).format([voice2], (drawingWidth / 2) - 10);
+            voice2.draw(context, stave2);
+        }
     }
 }
 
@@ -856,15 +859,25 @@ function initRhythmListeners() {
 function renderStaff() {
     uiElements.staffContainer.innerHTML = '';
     const renderer = new VF.Renderer(uiElements.staffContainer, VF.Renderer.Backends.SVG);
-    renderer.resize(450, 150);
+    
+    // Adjust width for mobile
+    const isMobile = window.innerWidth <= 700;
+    const isRhythm = state.trainingType === 'rhythm';
+    
+    const width = isMobile ? 280 : 450;
+    // Increase height for rhythm stacking on mobile
+    const height = (isMobile && isRhythm) ? 240 : (isMobile ? 120 : 150);
+    
+    renderer.resize(width, height);
     const context = renderer.getContext();
     
     if (state.trainingType === 'rhythm') {
-        renderRhythmStaff(context);
+        renderRhythmStaff(context, width, isMobile);
         return;
     }
 
-    const stave = new VF.Stave(10, 20, 280);
+    const staveWidth = isMobile ? 280 : 280; // Keep same for now, but centered
+    const stave = new VF.Stave(10, 20, staveWidth);
     stave.addClef("treble").setContext(context).draw();
 
     const offsets = state.trainingType === 'pitch' ? [0] : state.currentChallenge.offset;
